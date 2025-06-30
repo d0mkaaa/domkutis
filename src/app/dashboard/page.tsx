@@ -72,6 +72,7 @@ interface DiscordActivity {
   details?: string
   state?: string
   type: number
+  application_id?: string
   timestamps?: {
     start?: number
     end?: number
@@ -896,99 +897,448 @@ export default function Dashboard() {
     )
                       }
 
-                      return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        
+  const [activeTab, setActiveTab] = useState('overview')
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: Activity },
+    { id: 'messages', label: 'Messages', icon: MessageCircle },
+    { id: 'settings', label: 'Settings', icon: Settings }
+  ]
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-6xl mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
-                  <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Mail className="w-8 h-8 text-primary" />
-              Messages Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage contact form submissions
-            </p>
+          <div className="flex items-center space-x-4">
+            {user && (
+              <div className="flex items-center space-x-3">
+                <img 
+                  src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full"
+                />
+                <div>
+                  <h1 className="text-2xl font-bold">
+                    {user.global_name || user.username}
+                  </h1>
+                  <p className="text-muted-foreground">Dashboard</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setIsPublicVisible(!isPublicVisible)}
+              className="flex items-center space-x-2 px-3 py-2 glass-card hover:bg-muted/50 transition-colors"
+            >
+              {isPublicVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              <span className="text-sm">
+                {isPublicVisible ? 'Public' : 'Private'}
+              </span>
+            </button>
+            
+            <button
+              onClick={logout}
+              className="flex items-center space-x-2 px-3 py-2 glass-card hover:bg-red-500/20 text-red-500 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="text-sm">Logout</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex space-x-1 glass-card p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted/50'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+              {tab.id === 'messages' && unreadCount > 0 && (
+                <span className="ml-1 px-2 py-1 bg-orange-500 text-white text-xs rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="glass-card p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Messages</p>
+                      <p className="text-2xl font-bold">{stats.total}</p>
+                    </div>
+                    <MessageCircle className="w-8 h-8 text-primary" />
+                  </div>
+                  {unreadCount > 0 && (
+                    <p className="text-sm text-orange-500 mt-1">
+                      {unreadCount} unread
+                    </p>
+                  )}
+                </div>
+
+                {githubData && (
+                  <>
+                    <div className="glass-card p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Today's Commits</p>
+                          <p className="text-2xl font-bold">{githubData.todaysCommits}</p>
+                        </div>
+                        <Code className="w-8 h-8 text-green-500" />
+                      </div>
+                    </div>
+
+                    <div className="glass-card p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Total Stars</p>
+                          <p className="text-2xl font-bold">{githubData.totalStars}</p>
+                        </div>
+                        <Star className="w-8 h-8 text-yellow-500" />
+                      </div>
+                    </div>
+
+                    <div className="glass-card p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Active Repos</p>
+                          <p className="text-2xl font-bold">{githubData.activeRepos}</p>
+                        </div>
+                        <Github className="w-8 h-8 text-primary" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
-          <div className="flex gap-4">
-            <div className="glass-card px-4 py-2">
-              <div className="text-sm text-muted-foreground">Total</div>
-              <div className="text-2xl font-bold">{stats.total}</div>
-                </div>
-            <div className="glass-card px-4 py-2">
-              <div className="text-sm text-muted-foreground">Unread</div>
-              <div className="text-2xl font-bold text-orange-500">{stats.unread}</div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="glass-card p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      <Music className="w-5 h-5 text-green-500" />
+                      Spotify
+                    </h3>
+                    {!spotifyConnected ? (
+                      <button
+                        onClick={connectSpotify}
+                        className="px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition-colors"
+                      >
+                        Connect
+                      </button>
+                    ) : (
+                      <button
+                        onClick={disconnectSpotify}
+                        className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors"
+                      >
+                        Disconnect
+                      </button>
+                    )}
+                  </div>
+
+                  {currentTrack ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-4">
+                        {currentTrack.images.small && (
+                          <img 
+                            src={currentTrack.images.small} 
+                            alt="Album Art"
+                            className="w-16 h-16 rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{currentTrack.name}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {currentTrack.artists.map(a => a.name).join(', ')}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {currentTrack.album.name}
+                          </p>
+                        </div>
+                      </div>
+
+                      {currentTrack.isPlaying && (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>{Math.floor(liveProgress / 60000)}:{String(Math.floor((liveProgress % 60000) / 1000)).padStart(2, '0')}</span>
+                            <span>{Math.floor(currentTrack.duration / 60000)}:{String(Math.floor((currentTrack.duration % 60000) / 1000)).padStart(2, '0')}</span>
                           </div>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div 
+                              className="bg-green-500 h-2 rounded-full transition-all duration-1000"
+                              style={{ width: `${(liveProgress / currentTrack.duration) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      {spotifyConnected ? 'Not currently playing' : 'Connect Spotify to see current track'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                    <Activity className="w-5 h-5 text-blue-500" />
+                    Activity
+                  </h3>
+
+                  {discordPresence?.activity ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        {discordPresence.activity.assets?.large_image && (
+                          <img 
+                            src={discordPresence.activity.assets.large_image.startsWith('mp:') 
+                              ? `https://media.discordapp.net/${discordPresence.activity.assets.large_image.slice(3)}`
+                              : `https://cdn.discordapp.com/app-assets/${discordPresence.activity.application_id}/${discordPresence.activity.assets.large_image}.png`
+                            }
+                            alt="Activity"
+                            className="w-12 h-12 rounded-lg"
+                          />
+                        )}
+                        <div>
+                          <p className="font-medium">{discordPresence.activity.name}</p>
+                          {discordPresence.activity.details && (
+                            <p className="text-sm text-muted-foreground">{discordPresence.activity.details}</p>
+                          )}
+                          {discordPresence.activity.state && (
+                            <p className="text-xs text-muted-foreground">{discordPresence.activity.state}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : activity ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        {activity.type === 'coding' && <Code className="w-4 h-4 text-blue-500" />}
+                        {activity.type === 'gaming' && <Gamepad2 className="w-4 h-4 text-purple-500" />}
+                        {activity.type === 'listening' && <Music className="w-4 h-4 text-green-500" />}
+                        {activity.type === 'idle' && <Monitor className="w-4 h-4 text-gray-500" />}
+                        <span className="font-medium capitalize">{activity.type}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{activity.details}</p>
+                      {activity.application && (
+                        <p className="text-xs text-muted-foreground">in {activity.application}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No current activity</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'messages' && (
+            <motion.div
+              key="messages"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Messages</h2>
+                  <p className="text-muted-foreground">Manage contact form submissions</p>
+                </div>
+                
+                <button
+                  onClick={() => fetchMessages()}
+                  className="flex items-center space-x-2 px-4 py-2 glass-card hover:bg-muted/50 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {messages.length === 0 ? (
+                  <div className="glass-card p-12 text-center">
+                    <Mail className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
+                    <p className="text-muted-foreground">When people contact you, their messages will appear here.</p>
+                  </div>
+                ) : (
+                  messages.map((message) => (
+                    <div 
+                      key={message.id}
+                      className={`glass-card p-6 space-y-4 ${!message.read ? 'ring-2 ring-orange-500/50' : ''}`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">{message.subject}</h3>
+                            {!message.read && (
+                              <span className="px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">
+                                NEW
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            From: <span className="font-medium">{message.name}</span> 
+                            {' • '}
+                            <a 
+                              href={`mailto:${message.email}`} 
+                              className="text-primary hover:underline"
+                            >
+                              {message.email}
+                            </a>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(message.timestamp).toLocaleString()}
+                            {message.ip_address && ` • IP: ${message.ip_address}`}
                           </div>
                         </div>
                         
-        <div className="space-y-4">
-                {messages.length === 0 ? (
-            <div className="glass-card p-12 text-center">
-              <Mail className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
-              <p className="text-muted-foreground">When people contact you, their messages will appear here.</p>
-                  </div>
-                ) : (
-            messages.map((message) => (
-              <div 
-                        key={message.id}
-                className={`glass-card p-6 space-y-4 ${!message.read ? 'ring-2 ring-orange-500/50' : ''}`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg">{message.subject}</h3>
-                        {!message.read && (
-                        <span className="px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">
-                          NEW
-                        </span>
-                      )}
-                              </div>
-                    <div className="text-sm text-muted-foreground">
-                      From: <span className="font-medium">{message.name}</span> 
-                      {' • '}
-                      <a 
-                        href={`mailto:${message.email}`} 
-                        className="text-primary hover:underline"
-                      >
-                                  {message.email}
-                      </a>
-                              </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(message.timestamp).toLocaleString()}
-                      {message.ip_address && ` • IP: ${message.ip_address}`}
-                                </div>
-                            </div>
-                            
-                  <div className="flex gap-2">
-                    {!message.read && (
-                      <button
-                        onClick={() => markAsRead(message.id)}
-                        className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors"
-                        title="Mark as read"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => deleteMessage(message.id)}
-                      className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors"
-                      title="Delete message"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                            </div>
-                          </div>
-                          
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <p className="whitespace-pre-wrap">{message.message}</p>
-                            </div>
-                            </div>
-            ))
+                        <div className="flex gap-2">
+                          {!message.read && (
+                            <button
+                              onClick={() => markAsRead(message.id)}
+                              className="p-2 text-green-600 hover:bg-green-100 dark:hover:bg-green-900 rounded-lg transition-colors"
+                              title="Mark as read"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteMessage(message.id)}
+                            className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg transition-colors"
+                            title="Delete message"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <p className="whitespace-pre-wrap">{message.message}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
           )}
-        </div>
+
+          {activeTab === 'settings' && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div>
+                <h2 className="text-2xl font-bold">Settings</h2>
+                <p className="text-muted-foreground">Configure your dashboard and public profile</p>
+              </div>
+
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold mb-4">Activity Display</h3>
+                <div className="space-y-4">
+                  {Object.entries(activitySettings).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {key === 'showDiscord' && 'Show Discord presence and activity'}
+                          {key === 'showSpotify' && 'Show currently playing Spotify track'}
+                          {key === 'showCoding' && 'Show coding activity and commits'}
+                          {key === 'showGaming' && 'Show gaming activity'}
+                          {key === 'showGeneral' && 'Show general status updates'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActivitySettings(prev => ({ ...prev, [key]: !value }))}
+                        className="p-1"
+                      >
+                        {value ? (
+                          <ToggleRight className="w-8 h-8 text-primary" />
+                        ) : (
+                          <ToggleLeft className="w-8 h-8 text-muted-foreground" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {repoSettings.allRepos.length > 0 && (
+                <div className="glass-card p-6">
+                  <h3 className="text-lg font-semibold mb-4">Repository Visibility</h3>
+                  <div className="space-y-3">
+                    {repoSettings.allRepos.map((repo) => (
+                      <div key={repo.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{repo.name}</p>
+                            {repoSettings.featuredRepos.includes(repo.name) && (
+                              <Star className="w-4 h-4 text-yellow-500" />
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{repo.description}</p>
+                          <div className="flex items-center gap-4 mt-1">
+                            <span className="text-xs text-muted-foreground">{repo.language}</span>
+                            <span className="text-xs text-muted-foreground">{repo.stargazers_count} stars</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => toggleRepoFeatured(repo.name)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              repoSettings.featuredRepos.includes(repo.name)
+                                ? 'text-yellow-500 hover:bg-yellow-100 dark:hover:bg-yellow-900'
+                                : 'text-muted-foreground hover:bg-muted'
+                            }`}
+                            title="Toggle featured"
+                          >
+                            <Star className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => toggleRepoVisibility(repo.name)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              repoSettings.hiddenRepos.includes(repo.name)
+                                ? 'text-red-500 hover:bg-red-100 dark:hover:bg-red-900'
+                                : 'text-green-500 hover:bg-green-100 dark:hover:bg-green-900'
+                            }`}
+                            title={repoSettings.hiddenRepos.includes(repo.name) ? 'Show repository' : 'Hide repository'}
+                          >
+                            {repoSettings.hiddenRepos.includes(repo.name) ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
