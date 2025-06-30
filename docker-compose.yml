@@ -1,0 +1,53 @@
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:5432/domkutis_portfolio
+      - NEXT_PUBLIC_GITHUB_USERNAME=${NEXT_PUBLIC_GITHUB_USERNAME}
+      - NEXT_PUBLIC_DISCORD_USER_ID=${NEXT_PUBLIC_DISCORD_USER_ID}
+      - NEXT_PUBLIC_DISCORD_USERNAME=${NEXT_PUBLIC_DISCORD_USERNAME}
+      - NEXT_PUBLIC_DISCORD_DISPLAY_NAME=${NEXT_PUBLIC_DISCORD_DISPLAY_NAME}
+      - NEXT_PUBLIC_DISCORD_CLIENT_ID=${NEXT_PUBLIC_DISCORD_CLIENT_ID}
+      - NEXT_PUBLIC_SPOTIFY_CLIENT_ID=${NEXT_PUBLIC_SPOTIFY_CLIENT_ID}
+      - NEXT_PUBLIC_PROD_URL=${NEXT_PUBLIC_PROD_URL}
+      - NEXT_PUBLIC_DEV_URL=${NEXT_PUBLIC_DEV_URL}
+      - NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=${NEXT_PUBLIC_SPOTIFY_REDIRECT_URI}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=domkutis_portfolio
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: domkutis-network 

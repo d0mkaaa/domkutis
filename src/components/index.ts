@@ -1,0 +1,7 @@
+export { Navigation } from './Navigation'
+export { Hero } from './Hero'
+export { About } from './About'
+export { Projects } from './Projects'
+export { Contact } from './Contact'
+export { StatusWidget } from './StatusWidget'
+export { AnimatedBackground } from './AnimatedBackground'
