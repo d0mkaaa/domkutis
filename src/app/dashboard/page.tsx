@@ -798,7 +798,7 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [user])
 
-  if (!isAuthenticated) {
+    if (!user && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="w-full max-w-md">
@@ -806,33 +806,51 @@ export default function Dashboard() {
             <div className="text-center space-y-2">
               <Shield className="w-12 h-12 text-primary mx-auto" />
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Enter your admin key to continue</p>
+              <p className="text-muted-foreground">Login to access your dashboard</p>
             </div>
             
-            <form onSubmit={handleAuth} className="space-y-4">
-              <div>
-                <label htmlFor="authKey" className="block text-sm font-medium mb-2">
-                  Admin Key
-                </label>
+            <div className="space-y-4">
+              <button
+                onClick={loginWithDiscord}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                ) : (
+                  <>
+                    <User className="w-5 h-5" />
+                    <span>Login with Discord</span>
+                  </>
+                )}
+              </button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-muted-foreground/20"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-background px-2 text-muted-foreground">or</span>
+                </div>
+              </div>
+              
+              <form onSubmit={handleAuth} className="space-y-3">
                 <input
                   type="password"
-                  id="authKey"
                   value={authKey}
                   onChange={(e) => setAuthKey(e.target.value)}
                   className="w-full form-input"
-                  placeholder="Enter admin key"
-                  required
+                  placeholder="Admin API Key"
                 />
-              </div>
-              
-              <button
-                type="submit"
-                disabled={!authKey.trim()}
-                className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Access Dashboard
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={!authKey.trim()}
+                  className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Access with API Key
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -843,7 +861,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
+                </div>
     )
   }
 
@@ -860,17 +878,17 @@ export default function Dashboard() {
           >
             Retry
           </button>
-        </div>
-      </div>
+              </div>
+              </div>
     )
-  }
+                      }
 
-  return (
+                      return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         
         <div className="flex items-center justify-between">
-          <div>
+                  <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
               <Mail className="w-8 h-8 text-primary" />
               Messages Dashboard
@@ -878,43 +896,43 @@ export default function Dashboard() {
             <p className="text-muted-foreground mt-1">
               Manage contact form submissions
             </p>
-          </div>
-          
+              </div>
+
           <div className="flex gap-4">
             <div className="glass-card px-4 py-2">
               <div className="text-sm text-muted-foreground">Total</div>
               <div className="text-2xl font-bold">{stats.total}</div>
-            </div>
+                </div>
             <div className="glass-card px-4 py-2">
               <div className="text-sm text-muted-foreground">Unread</div>
               <div className="text-2xl font-bold text-orange-500">{stats.unread}</div>
-            </div>
-          </div>
-        </div>
-
+                          </div>
+                          </div>
+                        </div>
+                        
         <div className="space-y-4">
-          {messages.length === 0 ? (
+                {messages.length === 0 ? (
             <div className="glass-card p-12 text-center">
               <Mail className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No messages yet</h3>
               <p className="text-muted-foreground">When people contact you, their messages will appear here.</p>
-            </div>
-          ) : (
+                  </div>
+                ) : (
             messages.map((message) => (
               <div 
-                key={message.id} 
+                        key={message.id}
                 className={`glass-card p-6 space-y-4 ${!message.read ? 'ring-2 ring-orange-500/50' : ''}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-lg">{message.subject}</h3>
-                      {!message.read && (
+                        {!message.read && (
                         <span className="px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">
                           NEW
                         </span>
                       )}
-                    </div>
+                              </div>
                     <div className="text-sm text-muted-foreground">
                       From: <span className="font-medium">{message.name}</span> 
                       {' • '}
@@ -922,15 +940,15 @@ export default function Dashboard() {
                         href={`mailto:${message.email}`} 
                         className="text-primary hover:underline"
                       >
-                        {message.email}
+                                  {message.email}
                       </a>
-                    </div>
+                              </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(message.timestamp).toLocaleString()}
                       {message.ip_address && ` • IP: ${message.ip_address}`}
-                    </div>
-                  </div>
-                  
+                                </div>
+                            </div>
+                            
                   <div className="flex gap-2">
                     {!message.read && (
                       <button
@@ -948,13 +966,13 @@ export default function Dashboard() {
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
-                  </div>
-                </div>
-                
+                            </div>
+                          </div>
+                          
                 <div className="bg-muted/50 rounded-lg p-4">
                   <p className="whitespace-pre-wrap">{message.message}</p>
-                </div>
-              </div>
+                            </div>
+                            </div>
             ))
           )}
         </div>
