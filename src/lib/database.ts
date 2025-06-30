@@ -1,14 +1,21 @@
 import Database from 'better-sqlite3'
 import path from 'path'
+import fs from 'fs'
 
 let db: Database.Database | null = null
 
 export function getDatabase() {
   if (!db) {
-    const dbPath = path.join(process.cwd(), 'data', 'messages.db')
-    db = new Database(dbPath)
-    
-    db.exec(`
+    try {
+      const dataDir = path.join(process.cwd(), 'data')
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true })
+      }
+      
+      const dbPath = path.join(dataDir, 'messages.db')
+      db = new Database(dbPath)
+      
+      db.exec(`
       CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -54,6 +61,10 @@ export function getDatabase() {
       INSERT OR IGNORE INTO activity_settings (user_id) 
       VALUES ('default');
     `)
+    } catch (error) {
+      console.error('Database initialization failed:', error)
+      throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
   return db
 }
