@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - DATABASE_URL=postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@db:5432/domkutis_portfolio
       - NEXT_PUBLIC_GITHUB_USERNAME=${NEXT_PUBLIC_GITHUB_USERNAME}
       - NEXT_PUBLIC_DISCORD_USER_ID=${NEXT_PUBLIC_DISCORD_USER_ID}
