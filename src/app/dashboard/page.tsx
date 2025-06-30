@@ -439,14 +439,22 @@ export default function Dashboard() {
       setMessages([])
       setUnreadCount(0)
       setStats({ total: 0, unread: 0 })
+      throw err
     }
   }
 
-  const handleAuth = (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setIsAuthenticated(true)
-    fetchMessages(authKey)
+    try {
+      await fetchMessages(authKey)
+    } catch (error) {
+      console.error('Failed to fetch messages:', error)
+      setError('Failed to authenticate. Please check your API key.')
+      setIsAuthenticated(false)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const markAsRead = async (messageId: string) => {
@@ -688,6 +696,7 @@ export default function Dashboard() {
       .then(userData => {
         if (userData.id === AUTHORIZED_USER_ID) {
           setUser(userData)
+          setIsAuthenticated(true)
         } else {
           logout()
         }
@@ -718,6 +727,10 @@ export default function Dashboard() {
         featuredRepos: parsed.featuredRepos || []
       }))
     }
+
+    setTimeout(() => {
+      setLoading(false)
+    }, 1000)
   }, [])
 
   useEffect(() => {
