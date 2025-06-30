@@ -23,7 +23,7 @@ RUN npm run build
 
 FROM nginx:alpine AS production
 
-RUN apk add --no-cache nodejs npm
+RUN apk add --no-cache nodejs npm python3 make g++ libc6-compat
 
 WORKDIR /app
 
@@ -32,8 +32,11 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
 
 RUN mkdir -p /app/data
+
+RUN npm install better-sqlite3 --build-from-source
 
 RUN echo '#!/bin/sh' > /start.sh && \
     echo 'node server.js &' >> /start.sh && \

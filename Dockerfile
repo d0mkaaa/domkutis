@@ -1,7 +1,7 @@
 FROM node:22-alpine AS base
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat python3 make g++ git
+RUN apk add --no-cache nodejs npm python3 make g++ libc6-compat git
 
 WORKDIR /app
 
