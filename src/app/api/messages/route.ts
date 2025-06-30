@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getMessages, createMessage, markMessageAsRead, getUnreadMessagesCount } from '@/lib/database'
+import { getMessages, createMessage, markMessageAsRead, getUnreadMessagesCount, deleteMessage } from '@/lib/database'
 
 async function verifyAuthorization(request: NextRequest): Promise<boolean> {
   const discordToken = request.headers.get('discord-token')
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         subject: msg.subject,
         message: msg.message,
         read: msg.read,
-        timestamp: msg.created_at.toISOString(),
+        timestamp: msg.created_at,
         ip_address: msg.ip_address,
         user_agent: msg.user_agent
       })),
@@ -194,10 +194,9 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    const db = require('@/lib/database').getDatabase()
-    const result = await db.query('DELETE FROM messages WHERE id = $1 RETURNING *', [parseInt(messageId)])
+    const deleted = await deleteMessage(parseInt(messageId))
     
-    if (result.rows.length === 0) {
+    if (!deleted) {
       return NextResponse.json(
         { error: 'Message not found' },
         { status: 404 }
