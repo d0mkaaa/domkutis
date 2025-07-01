@@ -23,7 +23,7 @@ export function Hero() {
           }
         }
       } catch (error) {
-        console.log('Failed to fetch project count, using default')
+
       }
     }
 

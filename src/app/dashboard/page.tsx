@@ -314,14 +314,14 @@ export default function Dashboard() {
             expires_in: tokenData.expires_in
           })
         })
-        console.log('Spotify tokens saved server-side for public access')
+
       } catch (error) {
         console.error('Failed to save tokens server-side:', error)
       }
 
       fetchCurrentTrack(tokenData.access_token)
       
-      console.log('Spotify connected successfully!')
+
     } catch (error) {
       console.error('Spotify token exchange failed:', error)
       alert('Failed to connect to Spotify. Please try again.')
@@ -333,7 +333,7 @@ export default function Dashboard() {
       
       const expiryTime = localStorage.getItem('spotify_token_expiry')
       if (expiryTime && Date.now() > parseInt(expiryTime)) {
-        console.log('Spotify token expired')
+
         disconnectSpotify()
         return
       }
@@ -346,7 +346,7 @@ export default function Dashboard() {
 
       if (response.status === 401) {
         
-        console.log('Spotify token invalid, disconnecting...')
+
         disconnectSpotify()
         return
       }
@@ -583,7 +583,7 @@ export default function Dashboard() {
         throw new Error('Failed to save activity settings')
       }
       
-      console.log('Activity settings saved server-side')
+
     } catch (error) {
       console.error('Failed to save activity settings:', error)
       setActivitySettings(prev => ({ ...prev, [key]: !value }))
@@ -604,7 +604,7 @@ export default function Dashboard() {
       await fetch('/api/spotify/disconnect', {
         method: 'POST'
       })
-      console.log('Spotify disconnected from server')
+
     } catch (error) {
       console.error('Failed to disconnect from server:', error)
     }
@@ -718,7 +718,7 @@ export default function Dashboard() {
       
       window.history.replaceState({}, document.title, '/dashboard')
       
-      console.log('Discord authentication successful!')
+
     } catch (error) {
       console.error('Discord authentication failed:', error)
       alert('Failed to authenticate with Discord. Please try again.')
