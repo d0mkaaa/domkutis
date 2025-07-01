@@ -166,6 +166,7 @@ export default function Dashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [authKey, setAuthKey] = useState('')
   const [stats, setStats] = useState({ total: 0, unread: 0 })
+  const [activeTab, setActiveTab] = useState('overview')
 
   const AUTHORIZED_USER_ID = process.env.NEXT_PUBLIC_DISCORD_USER_ID || "578600798842519563"
   const SPOTIFY_CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID || "6b495025ba32453194ea7d4ac5916825"
@@ -894,10 +895,8 @@ export default function Dashboard() {
           </button>
               </div>
               </div>
-    )
-                      }
-
-  const [activeTab, setActiveTab] = useState('overview')
+            )
+  }
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Activity },
