@@ -85,6 +85,31 @@ export function StatusWidget() {
   const [discordActivity, setDiscordActivity] = useState<DiscordActivity | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [liveProgress, setLiveProgress] = useState(0)
+  const [activitySettings, setActivitySettings] = useState({
+    show_discord: true,
+    show_spotify: true,
+    show_coding: true,
+    show_gaming: true,
+    show_general: true
+  })
+
+  useEffect(() => {
+    const fetchActivitySettings = async () => {
+      try {
+        const response = await fetch('/api/settings/activity')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            setActivitySettings(data.data)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch activity settings:', error)
+      }
+    }
+
+    fetchActivitySettings()
+  }, [])
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -129,22 +154,16 @@ export function StatusWidget() {
   }, []);
 
   useEffect(() => {
+    if (!activitySettings.show_spotify) return
+
     const fetchSpotify = async () => {
       try {
-        const accessToken = localStorage.getItem('spotify_token');
-        
-        const headers: Record<string, string> = {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        };
-
-        if (accessToken) {
-          headers['Authorization'] = `Bearer ${accessToken}`;
-        }
-
         const response = await fetch('/api/spotify/current-track', {
           cache: 'no-store',
-          headers
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         
         if (response.ok) {
@@ -173,7 +192,7 @@ export function StatusWidget() {
     fetchSpotify();
     const interval = setInterval(fetchSpotify, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activitySettings.show_spotify]);
 
   useEffect(() => {
     if (!currentTrack || !currentTrack.isPlaying) return;
@@ -293,7 +312,7 @@ export function StatusWidget() {
             className="overflow-hidden"
           >
             <div className="glass-card mt-2 p-4 rounded-xl space-y-4">
-              {discordActivity && (
+              {discordActivity && activitySettings.show_discord && (
                 <div>
                   <div className="flex items-center space-x-2 mb-3">
                     <div className="w-2 h-2 bg-green-400 rounded-full" />
@@ -357,7 +376,7 @@ export function StatusWidget() {
                 </div>
               )}
 
-              {!discordActivity && (
+              {!discordActivity && activitySettings.show_general && (
                 <div>
                   <div className="flex items-center space-x-2 mb-3">
                     {getActivityIcon(activity.type as ActivityType)}
@@ -387,7 +406,7 @@ export function StatusWidget() {
                 </div>
               )}
 
-              {currentTrack && (
+              {currentTrack && activitySettings.show_spotify && (
                 <div className={discordActivity ? "border-t border-border pt-4" : ""}>
                   <div className="flex items-center space-x-2 mb-3">
                     <Music size={14} className="text-green-400" />

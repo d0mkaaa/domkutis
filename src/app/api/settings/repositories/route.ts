@@ -6,7 +6,14 @@ export async function GET(request: NextRequest) {
     const discordToken = request.headers.get('discord-token')
     
     if (!discordToken) {
-      return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 })
+      const settings = await getRepositorySettings('default')
+      return NextResponse.json({
+        success: true,
+        data: settings || {
+          hidden_repos: [],
+          featured_repos: []
+        }
+      })
     }
 
     try {

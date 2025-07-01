@@ -302,6 +302,23 @@ export default function Dashboard() {
       const expiryTime = Date.now() + (tokenData.expires_in * 1000)
       localStorage.setItem('spotify_token_expiry', expiryTime.toString())
 
+      try {
+        await fetch('/api/spotify/save-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            access_token: tokenData.access_token,
+            refresh_token: tokenData.refresh_token,
+            expires_in: tokenData.expires_in
+          })
+        })
+        console.log('Spotify tokens saved server-side for public access')
+      } catch (error) {
+        console.error('Failed to save tokens server-side:', error)
+      }
+
       fetchCurrentTrack(tokenData.access_token)
       
       console.log('Spotify connected successfully!')
@@ -408,6 +425,26 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Failed to fetch Discord activity:', error)
+    }
+  }
+
+  const fetchActivitySettings = async () => {
+    try {
+      const response = await fetch('/api/settings/activity')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setActivitySettings({
+            showDiscord: data.data.show_discord,
+            showSpotify: data.data.show_spotify,
+            showCoding: data.data.show_coding,
+            showGaming: data.data.show_gaming,
+            showGeneral: data.data.show_general
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch activity settings:', error)
     }
   }
 
@@ -525,14 +562,52 @@ export default function Dashboard() {
     }
   }
 
-  const disconnectSpotify = () => {
+  const updateActivitySetting = async (key: string, value: boolean) => {
+    setActivitySettings(prev => ({ ...prev, [key]: value }))
+    
+    try {
+      const discordToken = localStorage.getItem('discord_token')
+      const response = await fetch('/api/settings/activity', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'discord-token': discordToken || ''
+        },
+        body: JSON.stringify({
+          ...activitySettings,
+          [key]: value
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to save activity settings')
+      }
+      
+      console.log('Activity settings saved server-side')
+    } catch (error) {
+      console.error('Failed to save activity settings:', error)
+      setActivitySettings(prev => ({ ...prev, [key]: !value }))
+    }
+  }
+
+  const disconnectSpotify = async () => {
     setSpotifyConnected(false)
     setSpotifyAccessToken(null)
     setCurrentTrack(null)
+    
     localStorage.removeItem('spotify_token')
     localStorage.removeItem('spotify_refresh_token')
     localStorage.removeItem('spotify_token_expiry')
     localStorage.removeItem('spotify_auth_state')
+    
+    try {
+      await fetch('/api/spotify/disconnect', {
+        method: 'POST'
+      })
+      console.log('Spotify disconnected from server')
+    } catch (error) {
+      console.error('Failed to disconnect from server:', error)
+    }
   }
 
   const logout = () => {
@@ -718,6 +793,11 @@ export default function Dashboard() {
       fetchDiscordActivity()
       fetchMessages(savedDiscordToken)
       fetchGitHubData()
+      fetchActivitySettings()
+    }
+    
+    if (!savedDiscordToken) {
+      fetchActivitySettings()
     }
 
     const storedRepoSettings = localStorage.getItem('dashboard_repo_settings')
@@ -1269,7 +1349,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <button
-                        onClick={() => setActivitySettings(prev => ({ ...prev, [key]: !value }))}
+                        onClick={() => updateActivitySetting(key, !value)}
                         className="p-1"
                       >
                         {value ? (

@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthToken, saveAuthToken } from '@/lib/database'
 
 async function getAccessToken() {
   try {
+    const storedToken = await getAuthToken('spotify')
+    
+    if (!storedToken?.refresh_token) {
+      throw new Error('No refresh token available. Please connect Spotify in the dashboard.')
+    }
+
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': `Basic ${Buffer.from(`${process.env.SPOTIFY_CLIENT_ID}:${process.env.SPOTIFY_CLIENT_SECRET}`).toString('base64')}`
       },
-      body: 'grant_type=refresh_token&refresh_token=' + process.env.SPOTIFY_REFRESH_TOKEN
+      body: `grant_type=refresh_token&refresh_token=${storedToken.refresh_token}`
     });
 
     if (!response.ok) {
@@ -16,6 +23,13 @@ async function getAccessToken() {
     }
 
     const data = await response.json();
+    
+    await saveAuthToken('spotify', {
+      access_token: data.access_token,
+      refresh_token: storedToken.refresh_token,
+      expires_in: data.expires_in
+    })
+    
     return data.access_token;
   } catch (error) {
     console.error('Error getting access token:', error);

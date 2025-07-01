@@ -52,6 +52,18 @@ export function getDatabase() {
         UNIQUE(user_id)
       );
       
+      CREATE TABLE IF NOT EXISTS auth_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL DEFAULT 'default',
+        service TEXT NOT NULL,
+        access_token TEXT,
+        refresh_token TEXT,
+        expires_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, service)
+      );
+      
       CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
       CREATE INDEX IF NOT EXISTS idx_messages_read ON messages(read);
       
@@ -240,4 +252,47 @@ export async function updateActivitySettings(
 
   const selectStmt = database.prepare('SELECT * FROM activity_settings WHERE user_id = ?')
   return selectStmt.get(userId) as ActivitySettings
+}
+
+export interface AuthToken {
+  id: number
+  user_id: string
+  service: string
+  access_token?: string
+  refresh_token?: string
+  expires_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export async function saveAuthToken(
+  service: string,
+  tokens: { access_token?: string; refresh_token?: string; expires_in?: number },
+  userId: string = 'default'
+): Promise<void> {
+  const database = getDatabase()
+  
+  const expires_at = tokens.expires_in 
+    ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+    : null
+
+  const stmt = database.prepare(`
+    INSERT OR REPLACE INTO auth_tokens 
+    (user_id, service, access_token, refresh_token, expires_at, updated_at) 
+    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+  `)
+  
+  stmt.run(userId, service, tokens.access_token, tokens.refresh_token, expires_at)
+}
+
+export async function getAuthToken(service: string, userId: string = 'default'): Promise<AuthToken | null> {
+  const database = getDatabase()
+  const stmt = database.prepare('SELECT * FROM auth_tokens WHERE user_id = ? AND service = ?')
+  return stmt.get(userId, service) as AuthToken | null
+}
+
+export async function deleteAuthToken(service: string, userId: string = 'default'): Promise<void> {
+  const database = getDatabase()
+  const stmt = database.prepare('DELETE FROM auth_tokens WHERE user_id = ? AND service = ?')
+  stmt.run(userId, service)
 }

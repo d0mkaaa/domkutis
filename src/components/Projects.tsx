@@ -32,14 +32,32 @@ export function Projects() {
   }>({ hiddenRepos: [], featuredRepos: [] })
 
   useEffect(() => {
-    const storedRepoSettings = localStorage.getItem('dashboard_repo_settings')
-    if (storedRepoSettings) {
-      const parsed = JSON.parse(storedRepoSettings)
-      setRepoSettings({
-        hiddenRepos: parsed.hiddenRepos || [],
-        featuredRepos: parsed.featuredRepos || []
-      })
+    const fetchRepoSettings = async () => {
+      try {
+        const response = await fetch('/api/settings/repositories')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            setRepoSettings({
+              hiddenRepos: data.data.hidden_repos || [],
+              featuredRepos: data.data.featured_repos || []
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch repository settings:', error)
+        const storedRepoSettings = localStorage.getItem('dashboard_repo_settings')
+        if (storedRepoSettings) {
+          const parsed = JSON.parse(storedRepoSettings)
+          setRepoSettings({
+            hiddenRepos: parsed.hiddenRepos || [],
+            featuredRepos: parsed.featuredRepos || []
+          })
+        }
+      }
     }
+
+    fetchRepoSettings()
   }, [])
 
   useEffect(() => {
