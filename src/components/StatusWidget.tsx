@@ -168,7 +168,7 @@ export function StatusWidget() {
         
         if (response.ok) {
           const data = await response.json();
-          if (data.isPlaying) {
+          if (data.isPlaying && data.name) {
             setCurrentTrack({
               ...data,
               fetchedAt: Date.now()
@@ -179,6 +179,9 @@ export function StatusWidget() {
             setLiveProgress(0);
           }
         } else {
+          if (response.status !== 401) {
+            console.error('Error fetching Spotify data:', response.status);
+          }
           setCurrentTrack(null);
           setLiveProgress(0);
         }

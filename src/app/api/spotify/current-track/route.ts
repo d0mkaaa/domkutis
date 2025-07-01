@@ -49,9 +49,11 @@ export async function GET(request: NextRequest) {
       try {
         accessToken = await getAccessToken();
       } catch (error) {
+        
         return NextResponse.json({ 
-          error: 'No valid access token available. Please connect Spotify in the dashboard.' 
-        }, { status: 401 });
+          isPlaying: false,
+          message: 'Spotify not connected'
+        });
       }
     }
 
