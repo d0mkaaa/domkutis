@@ -93,9 +93,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const ip_address = request.headers.get('x-forwarded-for') || 
-                      request.headers.get('x-real-ip') || 
-                      'unknown'
+    let ip_address = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     request.headers.get('cf-connecting-ip') ||
+                     request.headers.get('x-client-ip') ||
+                     'unknown'
+
+    if (ip_address && ip_address !== 'unknown') {
+      ip_address = ip_address.split(',')[0].trim()
+
+      if (ip_address === '::1' || ip_address === '127.0.0.1') {
+        ip_address = 'localhost'
+      }
+    }
+
     const user_agent = request.headers.get('user-agent') || 'unknown'
 
     const newMessage = await createMessage({

@@ -3,7 +3,6 @@ import { getActivitySettings, updateActivitySettings } from '@/lib/database'
 
 export async function GET(request: NextRequest) {
   try {
-    // Allow public access to activity settings so the public website can respect them
     const settings = await getActivitySettings('default')
     
     return NextResponse.json({
@@ -19,7 +18,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching activity settings:', error)
     
-    // Return defaults if error
     return NextResponse.json({
       success: true,
       data: {
@@ -41,7 +39,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized access' }, { status: 401 })
     }
 
-    // Verify admin access
     try {
       const userResponse = await fetch('https://discord.com/api/users/@me', {
         headers: {

@@ -14,7 +14,7 @@ skills, experience, and personality.
 real GitHub repositories with live stats, language badges, and proper descriptions. No fake "coming soon" cards.
 
 ### 📬 **Contact Form**
-actually functional contact form that saves to PostgreSQL. messages show up in my admin dashboard.
+actually functional contact form that saves to Supabase. messages show up in my admin dashboard.
 
 ### 🎛️ **Admin Dashboard**
 Private dashboard shows:
@@ -44,27 +44,37 @@ Private dashboard shows:
    npm install
    ```
 
-3. **Set up your secrets** (create `.env` file):
+3. **Set up Supabase:**
+   - Create a project at [supabase.com](https://supabase.com)
+   - Go to Settings → API to get your URL and anon key
+   - Run the SQL from `supabase-setup.sql` in the SQL Editor
+   - If contact form gives RLS errors, run `supabase-fix-policies.sql`
+
+4. **Set up your secrets** (create `.env` file):
    ```env
-   # Your Discord stuff
-   NEXT_PUBLIC_DISCORD_CLIENT_ID=your_discord_client_id
-   DISCORD_CLIENT_SECRET=your_discord_client_secret
-   NEXT_PUBLIC_DISCORD_USER_ID=your_discord_user_id
-   
-   # Spotify integration
-   NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
-   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-   
-   # Your GitHub username
+   # Supabase Database
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+   # Your info
    NEXT_PUBLIC_GITHUB_USERNAME=your_github_username
+   NEXT_PUBLIC_DISCORD_USERNAME=your_discord_username
+   NEXT_PUBLIC_EMAIL=your_email@domain.com
+   NEXT_PUBLIC_DISPLAY_NAME=Your Name
+
+   # Optional: Discord/Spotify OAuth
+   DISCORD_CLIENT_ID=your_discord_client_id
+   DISCORD_CLIENT_SECRET=your_discord_client_secret
+   SPOTIFY_CLIENT_ID=your_spotify_client_id
+   SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
    ```
 
-4. **Fire it up:**
+5. **Fire it up:**
    ```bash
    npm run dev
    ```
 
-5. **Visit** [http://localhost:3000](http://localhost:3000) and prepare to be amazed.
+6. **Visit** [http://localhost:3000](http://localhost:3000) and prepare to be amazed.
 
 ## 🔧 The Full Setup (If You Want Everything)
 
@@ -106,10 +116,13 @@ NEXT_PUBLIC_GITHUB_USERNAME=your_github_username
 NEXT_PUBLIC_PROD_URL=https://your-domain.com
 NEXT_PUBLIC_DEV_URL=http://localhost:3000
 
-# Database (PostgreSQL)
-DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=your_secure_password
-DATABASE_URL=postgresql://postgres:password@localhost:5432/domkutis_portfolio
+# Supabase Database
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Admin Access
+ADMIN_API_KEY=your_secure_admin_key
+AUTHORIZED_USER_ID=your_discord_user_id
 ```
 
 ### 🐳 Docker Setup (Recommended)

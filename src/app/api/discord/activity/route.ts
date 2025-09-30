@@ -58,7 +58,7 @@ interface EnhancedActivity {
 export async function GET() {
   try {
     try {
-      const response = await fetch('https://api.lanyard.rest/v1/users/281476113465065472')
+      const response = await fetch('https://api.lanyard.rest/v1/users/578600798842519563')
       
       if (!response.ok) {
         throw new Error('Failed to fetch Discord presence')
@@ -73,11 +73,16 @@ export async function GET() {
       const presence = data.data
 
       let activity: EnhancedActivity | null = null
-      let discordStatus = presence.discord_status 
-      
+      let spotifyActivity: LanyardActivity | null = null
+      let discordStatus = presence.discord_status
+
       if (presence.activities && presence.activities.length > 0) {
+        spotifyActivity = presence.activities.find(
+          (act) => act.name === 'Spotify' && act.type === 2
+        ) || null
+
         const relevantActivity = presence.activities.find(
-          (act) => act.name !== 'Spotify' && act.type !== 2 
+          (act) => act.name !== 'Spotify' && act.type !== 2
         )
         
         if (relevantActivity) {
@@ -103,11 +108,11 @@ export async function GET() {
             if (gamingApps.some(game => relevantActivity.name.includes(game))) {
               activityCategory = 'gaming'
               if (relevantActivity.name.includes('VALORANT')) {
-                enhancedDetails = `🎯 ${relevantActivity.details || 'Playing VALORANT'}`
+                enhancedDetails = `${relevantActivity.details || 'Playing VALORANT'}`
               } else if (relevantActivity.name.includes('League')) {
-                enhancedDetails = `⚔️ ${relevantActivity.details || 'Playing League of Legends'}`
+                enhancedDetails = `${relevantActivity.details || 'Playing League of Legends'}`
               } else {
-                enhancedDetails = `🎮 ${relevantActivity.details || relevantActivity.name}`
+                enhancedDetails = `${relevantActivity.details || relevantActivity.name}`
               }
             }
           } else if (relevantActivity.name.includes('Discord')) {
@@ -134,19 +139,21 @@ export async function GET() {
       return NextResponse.json({
         status: discordStatus,
         activity: activity,
-        customStatus: presence.kv || {}, 
+        spotify: spotifyActivity,
+        customStatus: presence.kv || {},
         lastSeen: new Date().toISOString()
       })
       
     } catch (lanyardError) {
       console.log('Lanyard API not available, using fallback')
 
+
       const mockActivities: EnhancedActivity[] = [
         {
           name: 'Visual Studio Code',
-          details: '🔷 Editing route.ts',
-          originalDetails: 'Editing route.ts',
-          state: 'Working on API routes',
+          details: 'editing some file',
+          originalDetails: 'editing',
+          state: 'working on code',
           type: 0,
           category: 'coding',
           timestamps: { start: Date.now() - 3600000 },
@@ -157,8 +164,8 @@ export async function GET() {
         },
         {
           name: 'Visual Studio Code', 
-          details: '⚛️ Creating components',
-          originalDetails: 'Editing StatusWidget.tsx',
+          details: 'Creating components',
+          originalDetails: 'editing components',
           state: 'Working on portfolio components',
           type: 0,
           category: 'coding',
@@ -169,21 +176,8 @@ export async function GET() {
           }
         },
         {
-          name: 'VALORANT',
-          details: '🎯 Competitive Match',
-          originalDetails: 'Competitive Match',
-          state: 'Haven • 12-10',
-          type: 0,
-          category: 'gaming',
-          timestamps: { start: Date.now() - 1800000 },
-          assets: {
-            large_image: 'valorant',
-            large_text: 'VALORANT'
-          }
-        },
-        {
           name: 'Discord',
-          details: '🎤 In voice: General',
+          details: 'In voice: General',
           originalDetails: 'In a voice channel',
           state: 'General',
           type: 0,
@@ -203,9 +197,10 @@ export async function GET() {
       return NextResponse.json({
         status: 'online',
         activity: randomActivity,
+        spotify: null,
         customStatus: {},
         lastSeen: new Date().toISOString(),
-        source: 'mock' 
+        source: 'mock'
       })
     }
     

@@ -896,12 +896,12 @@ export default function Dashboard() {
     if (!user && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <div className="w-full max-w-md">
-          <div className="glass-card p-8 space-y-6">
+        <div className="w-full max-w-2xl">
+          <div className="glass-card p-10 space-y-8">
             <div className="text-center space-y-2">
               <Shield className="w-12 h-12 text-primary mx-auto" />
-              <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Login to access your dashboard</p>
+              <h1 className="text-2xl font-bold">admin dashboard</h1>
+              <p className="text-muted-foreground">login to access your dashboard</p>
             </div>
             
             <div className="space-y-4">
@@ -915,7 +915,7 @@ export default function Dashboard() {
                 ) : (
                   <>
                     <User className="w-5 h-5" />
-                    <span>Login with Discord</span>
+                    <span>login with discord</span>
                   </>
                 )}
               </button>
@@ -935,14 +935,14 @@ export default function Dashboard() {
                   value={authKey}
                   onChange={(e) => setAuthKey(e.target.value)}
                   className="w-full form-input"
-                  placeholder="Admin API Key"
+                  placeholder="admin api key"
                 />
                 <button
                   type="submit"
                   disabled={!authKey.trim()}
                   className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Access with API Key
+                  access with api key
                 </button>
               </form>
             </div>
@@ -979,9 +979,9 @@ export default function Dashboard() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: Activity },
-    { id: 'messages', label: 'Messages', icon: MessageCircle },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'overview', label: 'overview', icon: Activity },
+    { id: 'messages', label: 'messages', icon: MessageCircle },
+    { id: 'settings', label: 'settings', icon: Settings }
   ]
 
   return (
@@ -1000,7 +1000,7 @@ export default function Dashboard() {
                   <h1 className="text-2xl font-bold">
                     {user.global_name || user.username}
                   </h1>
-                  <p className="text-muted-foreground">Dashboard</p>
+                  <p className="text-muted-foreground">dashboard</p>
                 </div>
               </div>
             )}
@@ -1013,7 +1013,7 @@ export default function Dashboard() {
             >
               {isPublicVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               <span className="text-sm">
-                {isPublicVisible ? 'Public' : 'Private'}
+                {isPublicVisible ? 'public' : 'private'}
               </span>
             </button>
             
@@ -1022,7 +1022,7 @@ export default function Dashboard() {
               className="flex items-center space-x-2 px-3 py-2 glass-card hover:bg-red-500/20 text-red-500 transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              <span className="text-sm">Logout</span>
+              <span className="text-sm">logout</span>
             </button>
           </div>
         </div>
@@ -1062,7 +1062,7 @@ export default function Dashboard() {
                 <div className="glass-card p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Messages</p>
+                      <p className="text-sm text-muted-foreground">messages</p>
                       <p className="text-2xl font-bold">{stats.total}</p>
                     </div>
                     <MessageCircle className="w-8 h-8 text-primary" />
@@ -1243,7 +1243,14 @@ export default function Dashboard() {
                 </div>
                 
                 <button
-                  onClick={() => fetchMessages()}
+                  onClick={() => {
+                    if (authKey) {
+                      fetchMessages(authKey)
+                    } else if (user) {
+                      const token = localStorage.getItem('discord_token')
+                      if (token) fetchMessages(token)
+                    }
+                  }}
                   className="flex items-center space-x-2 px-4 py-2 glass-card hover:bg-muted/50 transition-colors"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -1265,7 +1272,7 @@ export default function Dashboard() {
                       className={`glass-card p-6 space-y-4 ${!message.read ? 'ring-2 ring-orange-500/50' : ''}`}
                     >
                       <div className="flex items-start justify-between">
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold text-lg">{message.subject}</h3>
                             {!message.read && (
@@ -1274,19 +1281,51 @@ export default function Dashboard() {
                               </span>
                             )}
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            From: <span className="font-medium">{message.name}</span> 
-                            {' • '}
-                            <a 
-                              href={`mailto:${message.email}`} 
-                              className="text-primary hover:underline"
-                            >
-                              {message.email}
-                            </a>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(message.timestamp).toLocaleString()}
-                            {message.ip_address && ` • IP: ${message.ip_address}`}
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-medium text-foreground">{message.name}</span>
+                              <span className="text-muted-foreground">•</span>
+                              <a
+                                href={`mailto:${message.email}`}
+                                className="text-blue-500 hover:text-blue-600 hover:underline font-medium"
+                              >
+                                {message.email}
+                              </a>
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span>{new Date(message.timestamp).toLocaleString()}</span>
+                              {message.ip_address && (
+                                <span className="flex items-center gap-1">
+                                  <span className={`w-2 h-2 rounded-full ${
+                                    message.ip_address === 'localhost' ? 'bg-blue-500' : 'bg-green-500'
+                                  }`}></span>
+                                  {message.ip_address === 'localhost' ? (
+                                    <span>🏠 Local</span>
+                                  ) : (
+                                    <span>IP: {message.ip_address}</span>
+                                  )}
+                                </span>
+                              )}
+                              {message.user_agent && (
+                                <span className="flex items-center gap-1 truncate max-w-xs" title={message.user_agent}>
+                                  {message.user_agent.includes('Chrome') ? '🌐' :
+                                   message.user_agent.includes('Firefox') ? '🦊' :
+                                   message.user_agent.includes('Safari') ? '🧭' :
+                                   message.user_agent.includes('Edge') ? '🔷' : '💻'}
+                                  <span>
+                                    {message.user_agent.includes('Chrome') ? 'Chrome' :
+                                     message.user_agent.includes('Firefox') ? 'Firefox' :
+                                     message.user_agent.includes('Safari') ? 'Safari' :
+                                     message.user_agent.includes('Edge') ? 'Edge' : 'Browser'} •{' '}
+                                    {message.user_agent.includes('Windows') ? 'Windows' :
+                                     message.user_agent.includes('Mac') ? 'macOS' :
+                                     message.user_agent.includes('Linux') ? 'Linux' :
+                                     message.user_agent.includes('Android') ? 'Android' :
+                                     message.user_agent.includes('iPhone') ? 'iOS' : 'Unknown OS'}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         

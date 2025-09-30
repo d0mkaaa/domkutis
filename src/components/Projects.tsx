@@ -132,7 +132,7 @@ export function Projects() {
               <div className="w-4 h-4 bg-secondary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-4 h-4 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             </div>
-            <p className="text-muted-foreground mt-4">Loading my GitHub projects...</p>
+            <p className="text-muted-foreground mt-4">loading my github projects...</p>
           </div>
         </div>
       </section>
@@ -148,7 +148,7 @@ export function Projects() {
               My <span className="gradient-text">Stuff</span>
             </h2>
             <div className="glass-card p-8 max-w-md mx-auto">
-              <p className="text-muted-foreground mb-4">😅 Couldn't load my GitHub projects</p>
+              <p className="text-muted-foreground mb-4">😅 couldn't load my github projects</p>
               <p className="text-sm text-muted-foreground">{error}</p>
               <motion.button
                 onClick={() => window.location.reload()}
@@ -156,7 +156,7 @@ export function Projects() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                Try Again
+                try again
               </motion.button>
             </div>
           </div>
@@ -176,23 +176,13 @@ export function Projects() {
           viewport={{ once: true }}
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            My <span className="gradient-text">Stuff</span>
+            my <span className="gradient-text">stuff</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Here's some cool stuff I've built. Fresh from GitHub, 
-            so you know it's the real deal. Most of it actually works!
+            some cool things i've built. fresh from github,
+            so you know it's legit. most of it actually works!
           </p>
           
-          <div className="mt-6 flex items-center justify-center">
-            <motion.a
-              href="/dashboard"
-              className="text-sm text-primary hover:text-primary/80 transition-colors glass-card px-4 py-2 rounded-lg hover-glow"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              📋 Manage repositories in dashboard
-            </motion.a>
-          </div>
         </motion.div>
 
         <motion.div 
@@ -321,15 +311,6 @@ export function Projects() {
 
         {otherProjects.length > 0 && (
           <div>
-            <motion.h3 
-              className="text-2xl font-semibold mb-8 text-center"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              🚀 More Cool Stuff
-            </motion.h3>
             <motion.div 
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               variants={containerVariants}
@@ -425,16 +406,15 @@ export function Projects() {
             href={`https://github.com/${process.env.NEXT_PUBLIC_GITHUB_USERNAME || 'd0mkaaa'}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center space-x-3 px-8 py-4 glass-card hover-glow group transition-all duration-300 hover:scale-105 rounded-2xl border-2 border-transparent hover:border-primary/20"
+            className="inline-flex items-center space-x-3 px-8 py-4 btn-glass group transition-all duration-300 hover:scale-105 rounded-2xl"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Github size={24} className="text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-              View All Projects on GitHub
+            <Github size={24} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+            <span className="text-lg font-semibold text-foreground group-hover:text-foreground transition-colors">
+              check out all my projects on github
             </span>
-            <ExternalLink size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl" />
+            <ExternalLink size={20} className="text-muted-foreground group-hover:text-foreground transition-colors" />
           </motion.a>
         </motion.div>
       </div>

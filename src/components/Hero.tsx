@@ -9,26 +9,7 @@ import { AnimatedBackground } from './AnimatedBackground'
 export function Hero() {
   const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
   const [isHovering, setIsHovering] = useState(false)
-  const [projectCount, setProjectCount] = useState('15+')
   const nameRef = useRef<HTMLSpanElement>(null)
-
-  useEffect(() => {
-    const fetchProjectCount = async () => {
-      try {
-        const response = await fetch(`/api/repos`)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.repos && Array.isArray(data.repos)) {
-            setProjectCount(`${data.repos.length}+`)
-          }
-        }
-      } catch (error) {
-
-      }
-    }
-
-    fetchProjectCount()
-  }, [])
 
   useEffect(() => {
     if (isHovering) return
@@ -133,9 +114,7 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.9 }}
           >
-            I build cool stuff on the web and honestly just love coding.{' '}
-            <span className="text-primary font-medium">Currently obsessed</span>{' '}
-            with making things that don't suck and actually work properly.
+            who the hell actually reads whats being written here?
           </motion.p>
 
           <motion.div 
@@ -171,31 +150,6 @@ export function Hero() {
             </motion.button>
           </motion.div>
 
-          <motion.div 
-            className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-12 max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 1.5 }}
-          >
-            {[
-              { number: '9+', label: 'Years Coding', emoji: '💻' },
-              { number: projectCount, label: 'Projects Built', emoji: '🚀' },
-              { number: '∞', label: 'Energy Drinks', emoji: '⚡' },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                className="glass-card p-6 text-center hover-glow group"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 1.7 + index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="text-3xl mb-2">{stat.emoji}</div>
-                <div className="text-2xl font-bold gradient-text">{stat.number}</div>
-                <div className="text-xs text-muted-foreground font-medium">{stat.label}</div>
-              </motion.div>
-            ))}
-          </motion.div>
 
           <motion.div 
             className="flex justify-center pt-16"

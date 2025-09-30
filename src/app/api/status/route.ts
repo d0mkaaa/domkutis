@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getDiscordActivity } from '@/lib/discord'
-import { getCurrentTrack } from '@/lib/spotify'
 
 export async function GET() {
   try {
-    
-    const [discordActivity, spotifyTrack] = await Promise.all([
-      getDiscordActivity(),
-      getCurrentTrack()
-    ])
+    const discordActivity = await getDiscordActivity()
 
     const activity = discordActivity ? {
-      type: discordActivity.type === 0 ? 'coding' : 
+      type: discordActivity.type === 0 ? 'coding' :
             discordActivity.type === 2 ? 'gaming' : 'other',
       details: discordActivity.details || '',
       application: discordActivity.name,
@@ -21,7 +16,6 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       activity,
-      currentTrack: spotifyTrack,
       discordActivity,
       lastUpdated: new Date().toISOString()
     })

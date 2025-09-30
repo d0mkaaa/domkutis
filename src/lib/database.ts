@@ -1,298 +1,267 @@
-import Database from 'better-sqlite3'
-import path from 'path'
-import fs from 'fs'
+import { supabase, supabaseAdmin, type Message, type AuthToken, type RepositorySettings, type ActivitySettings } from './supabase'
 
-let db: Database.Database | null = null
-
-export function getDatabase() {
-  if (!db) {
-    try {
-      const dataDir = path.join(process.cwd(), 'data')
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true })
-      }
-      
-      const dbPath = path.join(dataDir, 'messages.db')
-      db = new Database(dbPath)
-      
-      db.exec(`
-      CREATE TABLE IF NOT EXISTS messages (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        subject TEXT NOT NULL,
-        message TEXT NOT NULL,
-        read BOOLEAN DEFAULT FALSE,
-        ip_address TEXT,
-        user_agent TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      );
-      
-      CREATE TABLE IF NOT EXISTS repository_settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL DEFAULT 'default',
-        hidden_repos TEXT DEFAULT '[]',
-        featured_repos TEXT DEFAULT '[]',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id)
-      );
-      
-      CREATE TABLE IF NOT EXISTS activity_settings (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL DEFAULT 'default',
-        show_discord BOOLEAN DEFAULT TRUE,
-        show_spotify BOOLEAN DEFAULT TRUE,
-        show_coding BOOLEAN DEFAULT TRUE,
-        show_gaming BOOLEAN DEFAULT TRUE,
-        show_general BOOLEAN DEFAULT TRUE,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id)
-      );
-      
-      CREATE TABLE IF NOT EXISTS auth_tokens (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id TEXT NOT NULL DEFAULT 'default',
-        service TEXT NOT NULL,
-        access_token TEXT,
-        refresh_token TEXT,
-        expires_at DATETIME,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, service)
-      );
-      
-      CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at DESC);
-      CREATE INDEX IF NOT EXISTS idx_messages_read ON messages(read);
-      
-      INSERT OR IGNORE INTO repository_settings (user_id, hidden_repos, featured_repos) 
-      VALUES ('default', '[]', '[]');
-      
-      INSERT OR IGNORE INTO activity_settings (user_id) 
-      VALUES ('default');
-    `)
-    } catch (error) {
-      console.error('Database initialization failed:', error)
-      throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    }
-  }
-  return db
-}
-
-export interface Message {
-  id: number
+export async function saveMessage(messageData: {
   name: string
   email: string
   subject: string
   message: string
-  read: boolean
+  company?: string
+  projectType?: string
+  timestamp?: string
   ip_address?: string
   user_agent?: string
-  created_at: string
-  updated_at: string
-}
+}) {
+  try {
+    const client = supabaseAdmin === supabase ? supabase : supabaseAdmin
 
-export async function createMessage(data: {
-  name: string
-  email: string
-  subject: string
-  message: string
-  ip_address?: string
-  user_agent?: string
-}): Promise<Message> {
-  const database = getDatabase()
-  const stmt = database.prepare(`
-    INSERT INTO messages (name, email, subject, message, ip_address, user_agent) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `)
-  
-  const result = stmt.run(data.name, data.email, data.subject, data.message, data.ip_address, data.user_agent)
-  
-  const selectStmt = database.prepare('SELECT * FROM messages WHERE id = ?')
-  return selectStmt.get(result.lastInsertRowid) as Message
-}
+    const { data, error } = await client
+      .from('messages')
+      .insert([{
+        name: messageData.name,
+        email: messageData.email,
+        subject: messageData.subject,
+        message: messageData.message,
+        company: messageData.company,
+        project_type: messageData.projectType,
+        timestamp: messageData.timestamp,
+        ip_address: messageData.ip_address,
+        user_agent: messageData.user_agent
+      }])
+      .select()
+      .single()
 
-export async function getMessages(): Promise<Message[]> {
-  const database = getDatabase()
-  const stmt = database.prepare('SELECT * FROM messages ORDER BY created_at DESC')
-  return stmt.all() as Message[]
-}
-
-export async function markMessageAsRead(id: number): Promise<void> {
-  const database = getDatabase()
-  const stmt = database.prepare('UPDATE messages SET read = TRUE, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-  stmt.run(id)
-}
-
-export async function getUnreadMessagesCount(): Promise<number> {
-  const database = getDatabase()
-  const stmt = database.prepare('SELECT COUNT(*) as count FROM messages WHERE read = FALSE')
-  const result = stmt.get() as { count: number }
-  return result.count
-}
-
-export async function deleteMessage(id: number): Promise<boolean> {
-  const database = getDatabase()
-  const stmt = database.prepare('DELETE FROM messages WHERE id = ?')
-  const result = stmt.run(id)
-  return result.changes > 0
-}
-
-export interface RepositorySettings {
-  id: number
-  user_id: string
-  hidden_repos: string[]
-  featured_repos: string[]
-  created_at: string
-  updated_at: string
-}
-
-export async function getRepositorySettings(userId: string = 'default'): Promise<RepositorySettings | null> {
-  const database = getDatabase()
-  const stmt = database.prepare('SELECT * FROM repository_settings WHERE user_id = ?')
-  const result = stmt.get(userId) as any
-  
-  if (!result) return null
-  
-  return {
-    ...result,
-    hidden_repos: JSON.parse(result.hidden_repos || '[]'),
-    featured_repos: JSON.parse(result.featured_repos || '[]')
-  }
-}
-
-export async function updateRepositorySettings(
-  userId: string = 'default',
-  settings: { hidden_repos?: string[]; featured_repos?: string[] }
-): Promise<RepositorySettings> {
-  const database = getDatabase()
-  
-  const updateFields: string[] = []
-  const values: any[] = []
-
-  if (settings.hidden_repos !== undefined) {
-    updateFields.push('hidden_repos = ?')
-    values.push(JSON.stringify(settings.hidden_repos))
-  }
-
-  if (settings.featured_repos !== undefined) {
-    updateFields.push('featured_repos = ?')
-    values.push(JSON.stringify(settings.featured_repos))
-  }
-
-  if (updateFields.length > 0) {
-    updateFields.push('updated_at = CURRENT_TIMESTAMP')
-    values.push(userId)
-
-    const stmt = database.prepare(`
-      UPDATE repository_settings 
-      SET ${updateFields.join(', ')} 
-      WHERE user_id = ?
-    `)
-    stmt.run(...values)
-  }
-
-  const selectStmt = database.prepare('SELECT * FROM repository_settings WHERE user_id = ?')
-  const result = selectStmt.get(userId) as any
-  
-  return {
-    ...result,
-    hidden_repos: JSON.parse(result.hidden_repos || '[]'),
-    featured_repos: JSON.parse(result.featured_repos || '[]')
-  }
-}
-
-export interface ActivitySettings {
-  id: number
-  user_id: string
-  show_discord: boolean
-  show_spotify: boolean
-  show_coding: boolean
-  show_gaming: boolean
-  show_general: boolean
-  created_at: string
-  updated_at: string
-}
-
-export async function getActivitySettings(userId: string = 'default'): Promise<ActivitySettings | null> {
-  const database = getDatabase()
-  const stmt = database.prepare('SELECT * FROM activity_settings WHERE user_id = ?')
-  return stmt.get(userId) as ActivitySettings | null
-}
-
-export async function updateActivitySettings(
-  userId: string = 'default',
-  settings: Partial<Omit<ActivitySettings, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
-): Promise<ActivitySettings> {
-  const database = getDatabase()
-  
-  const updateFields: string[] = []
-  const values: any[] = []
-
-  Object.entries(settings).forEach(([key, value]) => {
-    if (value !== undefined) {
-      updateFields.push(`${key} = ?`)
-      values.push(value)
+    if (error) {
+      console.error('Database error details:', error)
+      throw error
     }
-  })
-
-  if (updateFields.length > 0) {
-    updateFields.push('updated_at = CURRENT_TIMESTAMP')
-    values.push(userId)
-
-    const stmt = database.prepare(`
-      UPDATE activity_settings 
-      SET ${updateFields.join(', ')} 
-      WHERE user_id = ?
-    `)
-    stmt.run(...values)
+    return data
+  } catch (error) {
+    console.error('Error saving message:', error)
+    throw new Error('Failed to save message')
   }
-
-  const selectStmt = database.prepare('SELECT * FROM activity_settings WHERE user_id = ?')
-  return selectStmt.get(userId) as ActivitySettings
 }
 
-export interface AuthToken {
-  id: number
-  user_id: string
-  service: string
-  access_token?: string
-  refresh_token?: string
-  expires_at?: string
-  created_at: string
-  updated_at: string
+export async function getMessages() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('messages')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data as Message[]
+  } catch (error) {
+    console.error('Error fetching messages:', error)
+    throw new Error('Failed to fetch messages')
+  }
 }
 
-export async function saveAuthToken(
-  service: string,
-  tokens: { access_token?: string; refresh_token?: string; expires_in?: number },
-  userId: string = 'default'
-): Promise<void> {
-  const database = getDatabase()
-  
-  const expires_at = tokens.expires_in 
-    ? new Date(Date.now() + tokens.expires_in * 1000).toISOString()
-    : null
+export async function deleteMessage(id: number) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('messages')
+      .delete()
+      .eq('id', id)
 
-  const stmt = database.prepare(`
-    INSERT OR REPLACE INTO auth_tokens 
-    (user_id, service, access_token, refresh_token, expires_at, updated_at) 
-    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-  `)
-  
-  stmt.run(userId, service, tokens.access_token, tokens.refresh_token, expires_at)
+    if (error) throw error
+    return true
+  } catch (error) {
+    console.error('Error deleting message:', error)
+    throw new Error('Failed to delete message')
+  }
 }
 
-export async function getAuthToken(service: string, userId: string = 'default'): Promise<AuthToken | null> {
-  const database = getDatabase()
-  const stmt = database.prepare('SELECT * FROM auth_tokens WHERE user_id = ? AND service = ?')
-  return stmt.get(userId, service) as AuthToken | null
+export async function getAuthToken(service: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('auth_tokens')
+      .select('*')
+      .eq('service', service)
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+    return data as AuthToken | null
+  } catch (error) {
+    console.error('Error getting auth token:', error)
+    throw new Error('Failed to get auth token')
+  }
 }
 
-export async function deleteAuthToken(service: string, userId: string = 'default'): Promise<void> {
-  const database = getDatabase()
-  const stmt = database.prepare('DELETE FROM auth_tokens WHERE user_id = ? AND service = ?')
-  stmt.run(userId, service)
+export async function saveAuthToken(service: string, token: string, refreshToken?: string, expiresAt?: string) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('auth_tokens')
+      .upsert([{
+        service,
+        token,
+        refresh_token: refreshToken,
+        expires_at: expiresAt
+      }])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error saving auth token:', error)
+    throw new Error('Failed to save auth token')
+  }
+}
+
+export async function getRepositorySettings() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('repository_settings')
+      .select('*')
+      .eq('user_id', 'default')
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+
+    if (!data) {
+      const { data: newData, error: insertError } = await supabaseAdmin
+        .from('repository_settings')
+        .insert([{
+          user_id: 'default',
+          hidden_repos: [],
+          featured_repos: []
+        }])
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+      return newData as RepositorySettings
+    }
+
+    return data as RepositorySettings
+  } catch (error) {
+    console.error('Error getting repository settings:', error)
+    throw new Error('Failed to get repository settings')
+  }
+}
+
+export async function saveRepositorySettings(hiddenRepos: string[], featuredRepos: string[]) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('repository_settings')
+      .upsert([{
+        user_id: 'default',
+        hidden_repos: hiddenRepos,
+        featured_repos: featuredRepos
+      }])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error saving repository settings:', error)
+    throw new Error('Failed to save repository settings')
+  }
+}
+
+export async function getActivitySettings() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('activity_settings')
+      .select('*')
+      .eq('user_id', 'default')
+      .single()
+
+    if (error && error.code !== 'PGRST116') throw error
+
+    if (!data) {
+      const { data: newData, error: insertError } = await supabaseAdmin
+        .from('activity_settings')
+        .insert([{
+          user_id: 'default',
+          show_discord: true,
+          show_spotify: true,
+          show_general: true
+        }])
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+      return newData as ActivitySettings
+    }
+
+    return data as ActivitySettings
+  } catch (error) {
+    console.error('Error getting activity settings:', error)
+    throw new Error('Failed to get activity settings')
+  }
+}
+
+export async function saveActivitySettings(settings: {
+  showDiscord: boolean
+  showSpotify: boolean
+  showGeneral: boolean
+}) {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('activity_settings')
+      .upsert([{
+        user_id: 'default',
+        show_discord: settings.showDiscord,
+        show_spotify: settings.showSpotify,
+        show_general: settings.showGeneral
+      }])
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error) {
+    console.error('Error saving activity settings:', error)
+    throw new Error('Failed to save activity settings')
+  }
+}
+
+export const createMessage = saveMessage
+export const updateActivitySettings = saveActivitySettings
+export const updateRepositorySettings = saveRepositorySettings
+
+export async function getUnreadMessagesCount() {
+  try {
+    const { count, error } = await supabaseAdmin
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+
+    if (error) throw error
+    return count || 0
+  } catch (error) {
+    console.error('Error getting unread messages count:', error)
+    return 0
+  }
+}
+
+export async function markMessageAsRead(id: number) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('messages')
+      .update({ read: true })
+      .eq('id', id)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    console.error('Error marking message as read:', error)
+    throw new Error('Failed to mark message as read')
+  }
+}
+
+export async function deleteAuthToken(service: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('auth_tokens')
+      .delete()
+      .eq('service', service)
+
+    if (error) throw error
+    return true
+  } catch (error) {
+    console.error('Error deleting auth token:', error)
+    throw new Error('Failed to delete auth token')
+  }
 }

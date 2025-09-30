@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Mail, Github, MessageCircle, Send, MapPin, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import CustomDropdown from './CustomDropdown'
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,8 @@ export function Contact() {
     email: '',
     subject: '',
     message: '',
+    company: '',
+    projectType: '',
   })
   
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
@@ -33,8 +36,8 @@ export function Contact() {
 
       if (response.ok) {
         setStatus('success')
-        setStatusMessage('Message sent successfully! I\'ll get back to you soon.')
-        setFormData({ name: '', email: '', subject: '', message: '' })
+        setStatusMessage('message sent! i\'ll get back to you soon')
+        setFormData({ name: '', email: '', subject: '', message: '', company: '', projectType: '' })
 
         setTimeout(() => setStatus('idle'), 5000)
       } else {
@@ -42,16 +45,23 @@ export function Contact() {
       }
     } catch (error) {
       setStatus('error')
-      setStatusMessage('Oops! Something went wrong. Please try again or email me directly.')
+      setStatusMessage('oops something went wrong. try again or just email me directly')
 
       setTimeout(() => setStatus('idle'), 5000)
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
+    })
+  }
+
+  const handleDropdownChange = (value: string) => {
+    setFormData({
+      ...formData,
+      projectType: value,
     })
   }
 
@@ -93,67 +103,51 @@ export function Contact() {
 
   return (
     <section id="contact" className="px-6 py-16 md:px-12 lg:px-24 xl:px-32">
-      <div className="max-w-6xl mx-auto">
-        <motion.div 
+      <div className="max-w-5xl mx-auto">
+        <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
         >
-          <motion.div 
-            className="inline-flex items-center space-x-2 mb-4"
+          <motion.h2
+            className="text-4xl md:text-5xl font-bold mb-6"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <Send className="w-8 h-8 text-primary" />
-            <h2 className="text-4xl md:text-5xl font-bold">
-              Hit Me <span className="gradient-text">Up</span>
-            </h2>
-            <Send className="w-8 h-8 text-secondary scale-x-[-1]" />
-          </motion.div>
-          <motion.p 
-            className="text-xl text-muted-foreground max-w-3xl mx-auto"
+            Hit Me <span className="gradient-text">Up</span>
+          </motion.h2>
+          <motion.div
+            className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto space-y-2"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            Got a cool project idea? Need help with something? Or just want to chat about code and life? 
-            <span className="text-primary font-medium"> I'm all ears!</span> Drop me a message using the form below, 
-            and I'll get back to you faster than you can say "Hello World".
-          </motion.p>
-          <motion.div 
-            className="flex items-center justify-center space-x-2 mt-4 text-sm text-muted-foreground"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <CheckCircle className="w-4 h-4 text-green-400" />
-            <span>Real human responses, no bots here!</span>
+            <p>got some cool project? wanna work together? or just saying hi?</p>
+            <p className="text-foreground font-medium">shoot me a message!</p>
+            <p>i actually read these and respond pretty fast</p>
           </motion.div>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <motion.div 
+        <div className="max-w-4xl mx-auto">
+          <motion.div
             className="glass-card-strong p-8 relative overflow-hidden"
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            {}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-secondary" />
-            
-            <div className="flex items-center space-x-2 mb-6">
-              <Mail className="w-6 h-6 text-primary" />
-              <h3 className="text-2xl font-semibold text-foreground">Drop me a line</h3>
+
+            <div className="mb-6">
+              <h3 className="text-2xl font-semibold text-foreground">drop me a message</h3>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="name" className="block form-label">
                     Name
@@ -166,7 +160,7 @@ export function Contact() {
                     onChange={handleChange}
                     required
                     className="w-full form-input"
-                    placeholder="Your name"
+                    placeholder="what should i call you?"
                   />
                 </div>
                 <div>
@@ -185,6 +179,41 @@ export function Contact() {
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="company" className="block form-label">
+                    Company/Organization <span className="text-muted-foreground text-sm">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="company"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleChange}
+                    className="w-full form-input"
+                    placeholder="company name or just 'personal'"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="projectType" className="block form-label">
+                    Project Type <span className="text-muted-foreground text-sm">(optional)</span>
+                  </label>
+                  <CustomDropdown
+                    options={[
+                      { value: "website", label: "website/web app" },
+                      { value: "mobile", label: "mobile app" },
+                      { value: "api", label: "backend/api stuff" },
+                      { value: "consulting", label: "need advice/consulting" },
+                      { value: "collaboration", label: "wanna collaborate" },
+                      { value: "other", label: "something else" }
+                    ]}
+                    value={formData.projectType}
+                    onChange={handleDropdownChange}
+                    placeholder="what kind of project?"
+                  />
+                </div>
+              </div>
               
               <div>
                 <label htmlFor="subject" className="block form-label">
@@ -198,7 +227,7 @@ export function Contact() {
                   onChange={handleChange}
                   required
                   className="w-full form-input"
-                  placeholder="What's this about?"
+                  placeholder="what's this about?"
                 />
               </div>
               
@@ -214,37 +243,35 @@ export function Contact() {
                   required
                   rows={5}
                   className="w-full form-input resize-none"
-                  placeholder="What's on your mind? Projects, ideas, or just wanna say hi?"
+                  placeholder="what's on your mind? got ideas? wanna say hi? just type whatever"
                 />
               </div>
               
               <motion.button
                 type="submit"
                 disabled={status === 'sending'}
-                className="w-full flex items-center justify-center space-x-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-semibold transition-all hover:scale-105 hover-glow shadow-lg disabled:cursor-not-allowed disabled:scale-100"
+                className="w-full flex items-center justify-center space-x-2 px-6 py-4 btn-primary rounded-xl font-semibold transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-50"
                 whileHover={{ scale: status === 'sending' ? 1 : 1.02 }}
                 whileTap={{ scale: status === 'sending' ? 1 : 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
                 {status === 'sending' ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    <span>Sending...</span>
+                    <span>sending...</span>
                   </>
                 ) : status === 'success' ? (
                   <>
                     <CheckCircle size={18} />
-                    <span>Sent!</span>
+                    <span>sent!</span>
                   </>
                 ) : status === 'error' ? (
                   <>
                     <AlertCircle size={18} />
-                    <span>Try Again</span>
+                    <span>try again</span>
                   </>
                 ) : (
-                  <>
-                    <Send size={18} />
-                    <span>Send Message</span>
-                  </>
+                  <span>send message</span>
                 )}
               </motion.button>
               
@@ -275,87 +302,22 @@ export function Contact() {
             </form>
           </motion.div>
 
-          <div className="space-y-8">
-            <motion.div 
-              className="glass-card p-8"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              viewport={{ once: true }}
+          <motion.div
+            className="text-center mt-8 text-sm text-muted-foreground"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            viewport={{ once: true }}
+          >
+            <p className="mb-2">or just email me directly at</p>
+            <a
+              href={`mailto:${process.env.NEXT_PUBLIC_EMAIL || 'rutkauskasdomantas@gmail.com'}`}
+              className="text-foreground hover:text-primary transition-colors"
             >
-              <h3 className="text-2xl font-semibold mb-6 text-foreground">Contact Information</h3>
-              <div className="space-y-4">
-                {contactInfo.map((info) => (
-                  <div key={info.label} className="flex items-center space-x-3">
-                    <div className="text-primary">
-                      {info.icon}
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">{info.label}</p>
-                      {info.href ? (
-                        <a
-                          href={info.href}
-                          className="text-foreground hover:text-primary transition-colors"
-                        >
-                          {info.value}
-                        </a>
-                      ) : (
-                        <p className="text-foreground">{info.value}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div 
-              className="glass-card p-8"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-2xl font-semibold mb-6 text-foreground">Connect With Me</h3>
-              <div className="space-y-4">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-3 p-3 rounded-lg border border-border hover:border-primary transition-all hover:scale-105 group"
-                  >
-                    <div className="text-muted-foreground group-hover:text-primary transition-colors">
-                      {social.icon}
-                    </div>
-                    <div>
-                      <p className="text-foreground group-hover:text-primary transition-colors font-medium">
-                        {social.label}
-                      </p>
-                      <p className="text-sm text-muted-foreground">{social.username}</p>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div 
-              className="glass-card p-8"
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-2xl font-semibold mb-4 text-foreground">Current Status</h3>
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <p className="text-foreground">Available for new projects</p>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Down for freelance gigs, full-time roles, or just cool collaborations.
-              </p>
-            </motion.div>
-          </div>
+              {process.env.NEXT_PUBLIC_EMAIL || 'rutkauskasdomantas@gmail.com'}
+            </a>
+            <p className="mt-2">usually respond within 24 hours • based in lithuania</p>
+          </motion.div>
         </div>
       </div>
     </section>
